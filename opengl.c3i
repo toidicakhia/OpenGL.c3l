@@ -61,9 +61,12 @@ alias Ext_GLVULKANPROCNV = fn void();
 alias GLLoadFn = fn void*(char*);
 
 module opengl;
+import opengl::internal, opengl::gl;
 
-import opengl::internal;
-import opengl::gl;
+macro loadGL(GLLoadFn load) @deprecated("Use opengl::init")
+{
+	return gl::load_gl_internal(load);
+}
 
 faultdef GL_INIT_FAILED;
 

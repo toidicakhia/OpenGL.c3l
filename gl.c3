@@ -9054,15 +9054,15 @@ alias PFNglMap2fPROC = fn void(GLenum target, GLfloat u1, GLfloat u2, GLint ustr
 PFNglMap2fPROC map2f = null;
 alias PFNglMap2xOESPROC = fn void(GLenum target, GLfixed u1, GLfixed u2, GLint ustride, GLint uorder, GLfixed v1, GLfixed v2, GLint vstride, GLint vorder, GLfixed points);
 PFNglMap2xOESPROC map2xOES = null;
-alias PFNglMapBufferPROC = fn void(GLenum target, GLenum access);
+alias PFNglMapBufferPROC = fn void*(GLenum target, GLenum access);
 PFNglMapBufferPROC mapBuffer = null;
-alias PFNglMapBufferARBPROC = fn void(GLenum target, GLenum access);
+alias PFNglMapBufferARBPROC = fn void*(GLenum target, GLenum access);
 PFNglMapBufferARBPROC mapBufferARB = null;
-alias PFNglMapBufferOESPROC = fn void(GLenum target, GLenum access);
+alias PFNglMapBufferOESPROC = fn void*(GLenum target, GLenum access);
 PFNglMapBufferOESPROC mapBufferOES = null;
-alias PFNglMapBufferRangePROC = fn void(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+alias PFNglMapBufferRangePROC = fn void*(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
 PFNglMapBufferRangePROC mapBufferRange = null;
-alias PFNglMapBufferRangeEXTPROC = fn void(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+alias PFNglMapBufferRangeEXTPROC = fn void*(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
 PFNglMapBufferRangeEXTPROC mapBufferRangeEXT = null;
 alias PFNglMapControlPointsNVPROC = fn void(GLenum target, GLuint index, GLenum type, GLsizei ustride, GLsizei vstride, GLint uorder, GLint vorder, GLboolean packed, void* points);
 PFNglMapControlPointsNVPROC mapControlPointsNV = null;
@@ -9078,21 +9078,21 @@ alias PFNglMapGrid2fPROC = fn void(GLint un, GLfloat u1, GLfloat u2, GLint vn, G
 PFNglMapGrid2fPROC mapGrid2f = null;
 alias PFNglMapGrid2xOESPROC = fn void(GLint n, GLfixed u1, GLfixed u2, GLfixed v1, GLfixed v2);
 PFNglMapGrid2xOESPROC mapGrid2xOES = null;
-alias PFNglMapNamedBufferPROC = fn void(GLuint buffer, GLenum access);
+alias PFNglMapNamedBufferPROC = fn void*(GLuint buffer, GLenum access);
 PFNglMapNamedBufferPROC mapNamedBuffer = null;
-alias PFNglMapNamedBufferEXTPROC = fn void(GLuint buffer, GLenum access);
+alias PFNglMapNamedBufferEXTPROC = fn void*(GLuint buffer, GLenum access);
 PFNglMapNamedBufferEXTPROC mapNamedBufferEXT = null;
-alias PFNglMapNamedBufferRangePROC = fn void(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access);
+alias PFNglMapNamedBufferRangePROC = fn void*(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access);
 PFNglMapNamedBufferRangePROC mapNamedBufferRange = null;
-alias PFNglMapNamedBufferRangeEXTPROC = fn void(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access);
+alias PFNglMapNamedBufferRangeEXTPROC = fn void*(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access);
 PFNglMapNamedBufferRangeEXTPROC mapNamedBufferRangeEXT = null;
-alias PFNglMapObjectBufferATIPROC = fn void(GLuint buffer);
+alias PFNglMapObjectBufferATIPROC = fn void*(GLuint buffer);
 PFNglMapObjectBufferATIPROC mapObjectBufferATI = null;
 alias PFNglMapParameterfvNVPROC = fn void(GLenum target, GLenum pname, GLfloat* params);
 PFNglMapParameterfvNVPROC mapParameterfvNV = null;
 alias PFNglMapParameterivNVPROC = fn void(GLenum target, GLenum pname, GLint* params);
 PFNglMapParameterivNVPROC mapParameterivNV = null;
-alias PFNglMapTexture2DINTELPROC = fn void(GLuint texture, GLint level, GLbitfield access, GLint* stride, GLenum* layout);
+alias PFNglMapTexture2DINTELPROC = fn void*(GLuint texture, GLint level, GLbitfield access, GLint* stride, GLenum* layout);
 PFNglMapTexture2DINTELPROC mapTexture2DINTEL = null;
 alias PFNglMapVertexAttrib1dAPPLEPROC = fn void(GLuint index, GLuint size, GLdouble u1, GLdouble u2, GLint stride, GLint order, GLdouble* points);
 PFNglMapVertexAttrib1dAPPLEPROC mapVertexAttrib1dAPPLE = null;
@@ -14837,6 +14837,21 @@ fn int load_gl_internal(GLLoadFn load) {
     int major, minor;
     getIntegerv(GL_MAJOR_VERSION, &major);
     getIntegerv(GL_MINOR_VERSION, &minor);
+    // Treating WebGL 2.0 like OpenGL 3.3 in order to load as many of the
+    // functions defined for WebGL 2.0 as possible. Not all OpenGL 3.1 to 3.3
+    // functions are supported in WebGL 2.0, but there is overlap.
+    if (major == 3 && minor == 0)
+    {
+        getString = load("glGetString");
+        if (getString != null)
+        {
+            String version_str = ((ZString)getString(GL_VERSION)).str_view();
+            if (version_str.contains("WebGL 2.0"))
+            {
+                minor = 3;
+            }
+        }
+    }
     
     int version = (major * 10) + minor;
     
